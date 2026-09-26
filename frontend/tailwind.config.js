@@ -4,32 +4,46 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#16213A",
-        paper: "#EDEFEA",
-        panel: "#FFFFFF",
-        line: "#D8DBD4",
-        muted: "#6C7268",
+        background: "#090D16",
+        surface: {
+          DEFAULT: "#111827",
+          hover: "#1F2937",
+          border: "#1E293B",
+          card: "#0F172A",
+        },
         brand: {
-          DEFAULT: "#2F5D8A",
-          dark: "#20456A",
-          light: "#E7EEF4",
+          50: "#EEF2FF",
+          100: "#E0E7FF",
+          500: "#6366F1",
+          600: "#4F46E5",
+          700: "#4338CA",
+          gradient: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
+        },
+        emerald: {
+          500: "#10B981",
+          600: "#059669",
         },
         amber: {
-          DEFAULT: "#D98E29",
-          light: "#FBF0DD",
+          500: "#F59E0B",
+          600: "#D97706",
         },
-        brick: {
-          DEFAULT: "#C1443C",
-          light: "#FAE7E5",
-        },
-        moss: {
-          DEFAULT: "#3A7D5C",
-          light: "#E4F0E9",
+        rose: {
+          500: "#F43F5E",
+          600: "#E11D48",
         },
       },
       fontFamily: {
-        display: ["Space Grotesk", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "Inter", "sans-serif"],
+        display: ["'Space Grotesk'", "'Plus Jakarta Sans'", "sans-serif"],
+      },
+      boxShadow: {
+        glow: "0 0 25px -5px rgba(99, 102, 241, 0.25)",
+        "glow-emerald": "0 0 25px -5px rgba(16, 185, 129, 0.25)",
+        "glow-amber": "0 0 25px -5px rgba(245, 158, 11, 0.25)",
+        card: "0 10px 30px -10px rgba(0, 0, 0, 0.5)",
+      },
+      backdropBlur: {
+        xs: "2px",
       },
     },
   },
