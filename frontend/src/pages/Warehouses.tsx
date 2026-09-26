@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { Warehouse } from "../types";
 import Modal from "../components/Modal";
+import { Warehouse as WarehouseIcon, MapPin, Plus, Building, Tag } from "lucide-react";
 
 export default function Warehouses() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -10,50 +11,76 @@ export default function Warehouses() {
 
   function load() {
     setLoading(true);
-    api.get<{ warehouses: Warehouse[] }>("/warehouses").then((res) => setWarehouses(res.warehouses)).finally(() => setLoading(false));
+    api
+      .get<{ warehouses: Warehouse[] }>("/warehouses")
+      .then((res) => setWarehouses(res.warehouses))
+      .finally(() => setLoading(false));
   }
   useEffect(load, []);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-lg font-semibold text-ink">Warehouses</h2>
-          <p className="text-sm text-muted">Locations stock can be received into, shipped from, or moved between.</p>
+          <h1 className="text-xl font-bold text-white font-display flex items-center gap-2">
+            <WarehouseIcon className="h-6 w-6 text-indigo-400" />
+            Facility & Warehouse Locations
+          </h1>
+          <p className="text-xs text-slate-400">Configure logistics hubs, production floors, and regional depots</p>
         </div>
+
         <button
           onClick={() => setShowCreate(true)}
-          className="focus-ring h-9 shrink-0 bg-brand px-4 text-sm font-medium text-white hover:bg-brand-dark"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition-all"
         >
-          + New warehouse
+          <Plus className="h-4 w-4" />
+          Add Warehouse Location
         </button>
       </div>
 
-      <div className="border border-line bg-panel">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-line bg-paper text-xs uppercase tracking-wide text-muted">
-            <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Code</th>
-              <th className="px-4 py-3 font-medium">Location</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && <tr><td colSpan={3} className="px-4 py-6 text-center text-muted">Loading…</td></tr>}
-            {!loading && warehouses.length === 0 && (
-              <tr><td colSpan={3} className="px-4 py-6 text-center text-muted">No warehouses yet.</td></tr>
-            )}
-            {warehouses.map((w) => (
-              <tr key={w.id} className="border-b border-line last:border-0 hover:bg-paper">
-                <td className="px-4 py-3 font-medium text-ink">{w.name}</td>
-                <td className="px-4 py-3 text-ink/80">{w.code}</td>
-                <td className="px-4 py-3 text-ink/80">{w.location || "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Grid of Warehouse Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {loading && (
+          <div className="col-span-full py-12 text-center text-slate-500 text-xs">
+            Loading warehouse facilities...
+          </div>
+        )}
+        {!loading && warehouses.length === 0 && (
+          <div className="col-span-full glass-panel rounded-2xl p-8 text-center text-slate-400 text-xs">
+            No warehouses registered yet.
+          </div>
+        )}
+
+        {!loading &&
+          warehouses.map((w) => (
+            <div
+              key={w.id}
+              className="glass-card p-5 rounded-2xl border border-slate-800 hover:border-indigo-500/40 transition-all duration-300 shadow-xl group"
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                  <Building className="h-6 w-6" />
+                </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-900 text-xs font-mono font-bold text-indigo-300 border border-slate-800">
+                  <Tag className="h-3 w-3 text-indigo-400" />
+                  {w.code}
+                </span>
+              </div>
+
+              <h3 className="text-base font-bold text-white font-display group-hover:text-indigo-300 transition-colors">
+                {w.name}
+              </h3>
+
+              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center gap-1.5 text-xs text-slate-400">
+                <MapPin className="h-4 w-4 text-rose-400 shrink-0" />
+                <span>{w.location || "Location not specified"}</span>
+              </div>
+            </div>
+          ))}
       </div>
 
+      {/* Modal */}
       {showCreate && (
         <CreateWarehouseModal
           onClose={() => setShowCreate(false)}
@@ -89,42 +116,52 @@ function CreateWarehouseModal({ onClose, onCreated }: { onClose: () => void; onC
   }
 
   return (
-    <Modal title="New warehouse" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="border border-brick bg-brick-light px-3 py-2 text-sm text-brick">{error}</div>}
+    <Modal title="Register New Warehouse Facility" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        {error && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-medium">
+            {error}
+          </div>
+        )}
+
         <div>
-          <label className="mb-1 block text-sm text-muted">Name</label>
+          <label className="mb-1 block font-semibold text-slate-300">Warehouse Name</label>
           <input
             required
+            placeholder="e.g. Central Hub Ludhiana"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="focus-ring h-10 w-full border border-line bg-paper px-3 text-sm"
+            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
           />
         </div>
+
         <div>
-          <label className="mb-1 block text-sm text-muted">Code</label>
+          <label className="mb-1 block font-semibold text-slate-300">Facility Code</label>
           <input
             required
+            placeholder="e.g. WH-MAIN"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="WH-03"
-            className="focus-ring h-10 w-full border border-line bg-paper px-3 text-sm"
+            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500"
           />
         </div>
+
         <div>
-          <label className="mb-1 block text-sm text-muted">Location</label>
+          <label className="mb-1 block font-semibold text-slate-300">City / Location Address</label>
           <input
+            placeholder="e.g. Ludhiana, Punjab"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="focus-ring h-10 w-full border border-line bg-paper px-3 text-sm"
+            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
           />
         </div>
+
         <button
           type="submit"
           disabled={submitting}
-          className="focus-ring h-10 w-full bg-brand text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+          className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-60 mt-2"
         >
-          {submitting ? "Creating…" : "Create warehouse"}
+          {submitting ? "Registering..." : "Register Warehouse"}
         </button>
       </form>
     </Modal>
