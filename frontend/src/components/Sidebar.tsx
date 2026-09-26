@@ -1,96 +1,128 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
-
-const ICONS: Record<string, JSX.Element> = {
-  dashboard: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="3" y="3" width="7" height="9" />
-      <rect x="14" y="3" width="7" height="5" />
-      <rect x="14" y="12" width="7" height="9" />
-      <rect x="3" y="16" width="7" height="5" />
-    </svg>
-  ),
-  products: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M21 8l-9-5-9 5 9 5 9-5z" />
-      <path d="M3 8v8l9 5 9-5V8" />
-      <path d="M12 13v8" />
-    </svg>
-  ),
-  receipts: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 3h16v18l-3-2-3 2-3-2-3 2-4-2V3z" />
-      <path d="M8 8h8M8 12h8M8 16h4" />
-    </svg>
-  ),
-  delivery: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="1" y="7" width="14" height="10" />
-      <path d="M15 10h4l3 3v4h-7z" />
-      <circle cx="5.5" cy="19" r="1.6" />
-      <circle cx="17.5" cy="19" r="1.6" />
-    </svg>
-  ),
-  transfer: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 8h13l-3-3M20 16H7l3 3" />
-    </svg>
-  ),
-  adjustment: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M12 3v6M12 21v-6M4.2 7.8l4.2 2.4M15.6 13.8l4.2 2.4M19.8 7.8l-4.2 2.4M8.4 13.8l-4.2 2.4" />
-    </svg>
-  ),
-  history: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="12" cy="13" r="8" />
-      <path d="M12 9v4l3 2M9 2h6" />
-    </svg>
-  ),
-  settings: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.55 1z" />
-    </svg>
-  ),
-};
-
-const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { to: "/products", label: "Products", icon: "products" },
-  { to: "/receipts", label: "Receipts", icon: "receipts" },
-  { to: "/deliveries", label: "Delivery Orders", icon: "delivery" },
-  { to: "/transfers", label: "Internal Transfers", icon: "transfer" },
-  { to: "/adjustments", label: "Inventory Adjustment", icon: "adjustment" },
-  { to: "/history", label: "Move History", icon: "history" },
-  { to: "/warehouses", label: "Settings", icon: "settings" },
-];
+import React, { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Repeat,
+  SlidersHorizontal,
+  History,
+  Warehouse,
+  User,
+  LogOut,
+  Boxes,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { api } from "../api/client";
+import { DashboardKpis } from "../types";
 
 export default function Sidebar() {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const [kpis, setKpis] = useState<DashboardKpis | null>(null);
+
+  useEffect(() => {
+    api
+      .get<DashboardKpis>("/dashboard/kpis")
+      .then(setKpis)
+      .catch(() => null);
+  }, [location.pathname]);
+
+  const navItems = [
+    { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { label: "Products & Stock", path: "/products", icon: Package, badge: kpis?.lowStock ? `${kpis.lowStock} low` : null, badgeColor: "amber" },
+    { label: "Receipts (Inbound)", path: "/receipts", icon: ArrowDownLeft, badge: kpis?.pendingReceipts ? String(kpis.pendingReceipts) : null, badgeColor: "indigo" },
+    { label: "Deliveries (Outbound)", path: "/deliveries", icon: ArrowUpRight, badge: kpis?.pendingDeliveries ? String(kpis.pendingDeliveries) : null, badgeColor: "indigo" },
+    { label: "Internal Transfers", path: "/transfers", icon: Repeat, badge: kpis?.scheduledTransfers ? String(kpis.scheduledTransfers) : null, badgeColor: "indigo" },
+    { label: "Inventory Audit", path: "/adjustments", icon: SlidersHorizontal },
+    { label: "Move History", path: "/history", icon: History },
+    { label: "Warehouses", path: "/warehouses", icon: Warehouse },
+  ];
+
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-line bg-panel">
-      <div className="flex items-center gap-2 border-b border-line px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center bg-ink text-paper font-display text-sm font-bold">
-          S
+    <aside className="w-64 bg-surface border-r border-surface-border flex flex-col h-screen select-none shrink-0 relative z-20">
+      {/* Brand Header */}
+      <div className="p-5 border-b border-surface-border flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <Boxes className="h-5 w-5 text-white" />
         </div>
-        <span className="font-display text-lg font-semibold text-ink">StockSense</span>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <h1 className="font-extrabold text-lg text-white font-display tracking-tight">StockSense</h1>
+            <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              IMS
+            </span>
+          </div>
+          <p className="text-xs text-slate-400">Inventory Telemetry</p>
+        </div>
       </div>
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
-                isActive ? "bg-brand-light font-medium text-brand-dark" : "text-ink/80 hover:bg-paper"
-              }`
-            }
-          >
-            {ICONS[item.icon]}
-            {item.label}
-          </NavLink>
-        ))}
+
+      {/* Navigation Links */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Core Operations
+        </div>
+
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                isActive
+                  ? "bg-indigo-600/20 text-white border border-indigo-500/30 shadow-md shadow-indigo-500/5 font-semibold"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Icon
+                  className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${
+                    isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"
+                  }`}
+                />
+                <span className="truncate">{item.label}</span>
+              </div>
+
+              {item.badge && (
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    item.badgeColor === "amber"
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      : "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                  }`}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
+
+      {/* User Profile Footer */}
+      <div className="p-3 m-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0">
+            {user?.name ? user.name.slice(0, 2).toUpperCase() : <User className="h-4 w-4" />}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-xs font-semibold text-white truncate">{user?.name || "User"}</p>
+            <p className="text-[10px] text-indigo-400 font-medium truncate">{user?.role || "Staff"}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={logout}
+          title="Log out"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
+      </div>
     </aside>
   );
 }
