@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { readDB, writeDB, uuid } from "../db";
 import { JWT_SECRET, requireAuth, AuthedRequest } from "../middleware/auth";
+import { User } from "../types";
 
 const router = Router();
 
@@ -19,12 +20,12 @@ router.post("/signup", (req, res) => {
   if (db.users.some((u) => u.email.toLowerCase() === String(email).toLowerCase())) {
     return res.status(409).json({ error: "An account with this email already exists" });
   }
-  const user = {
+  const user: User = {
     id: uuid(),
     name,
     email: String(email).toLowerCase(),
     passwordHash: bcrypt.hashSync(password, 8),
-    role: role === "Warehouse Staff" ? "Warehouse Staff" : ("Inventory Manager" as const),
+    role: role === "Warehouse Staff" ? "Warehouse Staff" : "Inventory Manager",
     createdAt: new Date().toISOString(),
   };
   db.users.push(user);
